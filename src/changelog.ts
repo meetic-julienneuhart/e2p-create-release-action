@@ -80,7 +80,7 @@ export class Changelog {
         .map(commit => {
           return {
             message: commit.commit.message,
-            url: commit.url,
+            url: commit.html_url,
             sha: commit.sha
           }
         })
@@ -105,7 +105,7 @@ export class Changelog {
       commits.push(
         ...fetchedCommits.map(commit => ({
           message: commit.commit.message,
-          url: commit.url,
+          url: commit.html_url,
           sha: commit.sha
         }))
       )
