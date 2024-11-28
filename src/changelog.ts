@@ -124,20 +124,24 @@ export class Changelog {
     let changelog = ''
 
     if (!skipTitle) {
-      changelog += `\n# ${release.version}\n`
+      changelog += `\n## ${release.version}\n`
     }
 
     for (const [type, title] of commitTypeNames.entries()) {
       let typeChangelog = ''
 
       release.commits.map((commit: Commit) => {
+        if (commit.message.trim().startsWith('ci(skip)')) {
+          return
+        }
+
         if (commit.message.trim().startsWith(type)) {
           typeChangelog += `- ${commit.message} ${commit.url}\n`
         }
       })
 
       if (typeChangelog.length > 0) {
-        changelog += `\n## ${title}\n`
+        changelog += `\n### ${title}\n`
         changelog += typeChangelog
       }
     }
