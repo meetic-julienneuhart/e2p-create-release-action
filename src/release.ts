@@ -26,15 +26,12 @@ export class Release {
    * @private
    */
   private async generateChangelog(): Promise<void> {
-    const releaseCount = 10
-    core.startGroup(`Generate CHANGELOG.md for last ${releaseCount} releases`)
+    core.startGroup(`Generate CHANGELOG.md`)
 
-    await this.changelog.generate(this.version, releaseCount)
+    await this.changelog.generate(this.version, 9)
     this.modifiedFiles.push('CHANGELOG.md')
 
-    core.info(
-      `CHANGELOG.md has been successfully generated with last ${releaseCount} releases`
-    )
+    core.info(`CHANGELOG.md has been successfully generated`)
     core.endGroup()
   }
 

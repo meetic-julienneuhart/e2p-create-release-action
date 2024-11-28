@@ -1,6 +1,7 @@
 import fs from 'fs'
 import { GitHub } from '@actions/github/lib/utils'
 import * as github from '@actions/github'
+import * as core from '@actions/core'
 
 type Commit = {
   message: string
@@ -94,7 +95,7 @@ export class Changelog {
       page++
     } while (fetchedCommits.length === 100)
 
-    return commits.reverse() // Reverse to get chronological order.
+    return commits
   }
 
   /**
@@ -139,8 +140,10 @@ export class Changelog {
       page: 1
     })
 
+    core.debug(`Found ${releases.length} previous releases`)
+
     if (releases.length === 0) {
-      // No release yet.
+      core.debug(`No previous release yet`)
       const changelog = await this.release()
       fs.writeFileSync('CHANGELOG.md', `# ${version}\n\n${changelog}`)
       return
@@ -148,18 +151,21 @@ export class Changelog {
 
     const tagsSha: string[] = []
     for (const release of releases) {
+      core.debug(`Get tag SHA for release ${release.tag_name}`)
       const sha = await this.tagCommitSha(release.tag_name)
       tagsSha.push(sha)
     }
 
     // Get commits for the version being released.
     const beingReleasedCommits = await this.commits(tagsSha[0], 'HEAD')
+    core.debug(`Found ${beingReleasedCommits.length} for release ${version}`)
 
     // Get commits for each previous release.
     const commitsPerPreviousRelease: CommitsPerRelease[] = []
     for (let index = 0; index < releases.length - 1; index++) {
       const release = releases[index]
       const commits = await this.commits(tagsSha[index + 1], tagsSha[index])
+      core.debug(`Found ${commits.length} for release ${release.tag_name}`)
 
       commitsPerPreviousRelease.push({
         version: release.tag_name,

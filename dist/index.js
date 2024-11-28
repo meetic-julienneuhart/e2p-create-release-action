@@ -29933,6 +29933,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Changelog = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(9896));
 const github = __importStar(__nccwpck_require__(3228));
+const core = __importStar(__nccwpck_require__(7484));
 class Changelog {
     octokit;
     constructor(octokit) {
@@ -29996,7 +29997,7 @@ class Changelog {
             })));
             page++;
         } while (fetchedCommits.length === 100);
-        return commits.reverse(); // Reverse to get chronological order.
+        return commits;
     }
     /**
      * Generate the release CHANGELOG.
@@ -30033,24 +30034,28 @@ class Changelog {
             per_page: releaseCount + 1, // Get one more to compare with the last release.
             page: 1
         });
+        core.debug(`Found ${releases.length} previous releases`);
         if (releases.length === 0) {
-            // No release yet.
+            core.debug(`No previous release yet`);
             const changelog = await this.release();
             fs_1.default.writeFileSync('CHANGELOG.md', `# ${version}\n\n${changelog}`);
             return;
         }
         const tagsSha = [];
         for (const release of releases) {
+            core.debug(`Get tag SHA for release ${release.tag_name}`);
             const sha = await this.tagCommitSha(release.tag_name);
             tagsSha.push(sha);
         }
         // Get commits for the version being released.
         const beingReleasedCommits = await this.commits(tagsSha[0], 'HEAD');
+        core.debug(`Found ${beingReleasedCommits.length} for release ${version}`);
         // Get commits for each previous release.
         const commitsPerPreviousRelease = [];
         for (let index = 0; index < releases.length - 1; index++) {
             const release = releases[index];
             const commits = await this.commits(tagsSha[index + 1], tagsSha[index]);
+            core.debug(`Found ${commits.length} for release ${release.tag_name}`);
             commitsPerPreviousRelease.push({
                 version: release.tag_name,
                 commits: commits
@@ -30184,11 +30189,10 @@ class Release {
      * @private
      */
     async generateChangelog() {
-        const releaseCount = 10;
-        core.startGroup(`Generate CHANGELOG.md for last ${releaseCount} releases`);
-        await this.changelog.generate(this.version, releaseCount);
+        core.startGroup(`Generate CHANGELOG.md`);
+        await this.changelog.generate(this.version, 9);
         this.modifiedFiles.push('CHANGELOG.md');
-        core.info(`CHANGELOG.md has been successfully generated with last ${releaseCount} releases`);
+        core.info(`CHANGELOG.md has been successfully generated`);
         core.endGroup();
     }
     /**
