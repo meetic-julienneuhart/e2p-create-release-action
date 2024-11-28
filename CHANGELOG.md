@@ -1,4 +1,2 @@
-# v0.1.0
-
-- Initial commit https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/ba53f84d9c9a10e356ede3ad041634085887f1b4
-- feat: bootstrap action https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/b16002c092eacf5a27220bd5c5df6718336d6cbd
+# v0.2.0
+- feat: this is for the second release https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/5c92abf0a11dcd8f891be28e6d137b211aa780fd
