@@ -13,6 +13,19 @@ type CommitsPerRelease = {
   commits: Commit[]
 }
 
+// See https://github.com/pvdlg/conventional-changelog-metahub.
+const commitTypeNames: Map<string, string> = new Map<string, string>()
+commitTypeNames.set('feat', 'Features')
+commitTypeNames.set('fix', 'Bug Fixes')
+commitTypeNames.set('docs', 'Documentation')
+commitTypeNames.set('style', 'Styles')
+commitTypeNames.set('refactor', 'Code Refactoring')
+commitTypeNames.set('test', 'Tests')
+commitTypeNames.set('build', 'Builds')
+commitTypeNames.set('ci', 'Continuous Integrations')
+commitTypeNames.set('chore', 'Chores')
+commitTypeNames.set('revert', 'Reverts')
+
 export class Changelog {
   private octokit: InstanceType<typeof GitHub>
 
@@ -62,12 +75,14 @@ export class Changelog {
           basehead: `${base}...${head}`
         })
 
-      return compare.commits.map(commit => {
-        return {
-          message: commit.commit.message,
-          url: commit.html_url
-        }
-      })
+      return compare.commits
+        .map(commit => {
+          return {
+            message: commit.commit.message,
+            url: commit.url
+          }
+        })
+        .reverse()
     }
 
     // No base, get all commits up to HEAD.
@@ -88,7 +103,7 @@ export class Changelog {
       commits.push(
         ...fetchedCommits.map(commit => ({
           message: commit.commit.message,
-          url: commit.html_url
+          url: commit.url
         }))
       )
 
@@ -96,6 +111,32 @@ export class Changelog {
     } while (fetchedCommits.length === 100)
 
     return commits.reverse()
+  }
+
+  /**
+   * Generate a markdown CHANGELOG for given release.
+   * @param release The release to generate a CHANGELOG for.
+   * @param skipTitle Do not add the release version as title.
+   * @returns {string} The CHANGELOG markdown.
+   * @private
+   */
+  private markdown(release: CommitsPerRelease, skipTitle: boolean): string {
+    let changelog = ''
+
+    if (!skipTitle) {
+      changelog += `\n# ${release.version}\n`
+    }
+
+    for (const [type, title] of commitTypeNames.entries()) {
+      changelog += `\n## ${title}\n`
+      release.commits.map((commit: Commit) => {
+        if (commit.message.trim().startsWith(type)) {
+          changelog += `- ${commit.message} ${commit.url}\n`
+        }
+      })
+    }
+
+    return changelog
   }
 
   /**
@@ -119,12 +160,13 @@ export class Changelog {
 
     const commits = await this.commits(baseSha, 'HEAD')
 
-    let changelog = ''
-    for (const commit of commits) {
-      changelog += `- ${commit.message} ${commit.url}\n`
-    }
-
-    return changelog
+    return this.markdown(
+      {
+        version: '',
+        commits: commits
+      },
+      true
+    )
   }
 
   /**
@@ -150,6 +192,8 @@ export class Changelog {
       tagsSha.push(sha)
     }
 
+    const commitsPerRelease: CommitsPerRelease[] = []
+
     // Get commits for the version being released.
     let beingReleasedCommits: Commit[] = []
     if (releases.length > 0) {
@@ -164,9 +208,12 @@ export class Changelog {
       `Found ${beingReleasedCommits.length} commits for release ${version}`
     )
 
-    // Get commits for each previous release.
+    commitsPerRelease.push({
+      version: version,
+      commits: beingReleasedCommits
+    })
 
-    const commitsPerPreviousRelease: CommitsPerRelease[] = []
+    // Get commits for each previous release.
     for (let index = 0; index < releases.length; index++) {
       const release = releases[index]
       const headSha = tagsSha[index]
@@ -183,25 +230,16 @@ export class Changelog {
         `Found ${commits.length} commits for release ${release.tag_name}`
       )
 
-      commitsPerPreviousRelease.push({
+      commitsPerRelease.push({
         version: release.tag_name,
         commits: commits
       })
     }
 
-    let changelog = `# ${version}\n`
-
-    for (const commit of beingReleasedCommits) {
-      changelog += `- ${commit.message} ${commit.url}\n`
-    }
-
-    for (const release of commitsPerPreviousRelease) {
-      changelog += `\n# ${release.version}\n`
-
-      for (const commit of release.commits) {
-        changelog += `- ${commit.message} ${commit.url}\n`
-      }
-    }
+    let changelog = ''
+    commitsPerRelease.map((release: CommitsPerRelease) => {
+      changelog += this.markdown(release, false)
+    })
 
     fs.writeFileSync('CHANGELOG.md', changelog)
   }
