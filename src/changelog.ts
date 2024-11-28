@@ -95,7 +95,7 @@ export class Changelog {
       page++
     } while (fetchedCommits.length === 100)
 
-    return commits
+    return commits.reverse()
   }
 
   /**
@@ -136,18 +136,12 @@ export class Changelog {
   async generate(version: string, releaseCount: number): Promise<void> {
     const { data: releases } = await this.octokit.rest.repos.listReleases({
       ...github.context.repo,
-      per_page: releaseCount + 1, // Get one more to compare with the last release.
+      per_page: releaseCount,
       page: 1
     })
 
+    core.debug(`Current release: ${releases.length}`)
     core.debug(`Found ${releases.length} previous releases`)
-
-    if (releases.length === 0) {
-      core.debug(`No previous release yet`)
-      const changelog = await this.release()
-      fs.writeFileSync('CHANGELOG.md', `# ${version}\n\n${changelog}`)
-      return
-    }
 
     const tagsSha: string[] = []
     for (const release of releases) {
@@ -157,15 +151,37 @@ export class Changelog {
     }
 
     // Get commits for the version being released.
-    const beingReleasedCommits = await this.commits(tagsSha[0], 'HEAD')
-    core.debug(`Found ${beingReleasedCommits.length} for release ${version}`)
+    let beingReleasedCommits: Commit[] = []
+    if (releases.length > 0) {
+      // There are previous releases.
+      const latestReleaseSha = tagsSha[0]
+      beingReleasedCommits = await this.commits(latestReleaseSha, 'HEAD')
+    } else {
+      // No previous releases.
+      beingReleasedCommits = await this.commits(undefined, 'HEAD')
+    }
+    core.debug(
+      `Found ${beingReleasedCommits.length} commits for release ${version}`
+    )
 
     // Get commits for each previous release.
+
     const commitsPerPreviousRelease: CommitsPerRelease[] = []
-    for (let index = 0; index < releases.length - 1; index++) {
+    for (let index = 0; index < releases.length; index++) {
       const release = releases[index]
-      const commits = await this.commits(tagsSha[index + 1], tagsSha[index])
-      core.debug(`Found ${commits.length} for release ${release.tag_name}`)
+      const headSha = tagsSha[index]
+      let baseSha: string | undefined
+
+      if (index + 1 < releases.length) {
+        baseSha = tagsSha[index + 1]
+      } else {
+        baseSha = undefined // Oldest release.
+      }
+
+      const commits = await this.commits(baseSha, headSha)
+      core.debug(
+        `Found ${commits.length} commits for release ${release.tag_name}`
+      )
 
       commitsPerPreviousRelease.push({
         version: release.tag_name,
