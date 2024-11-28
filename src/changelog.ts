@@ -6,6 +6,7 @@ import * as core from '@actions/core'
 type Commit = {
   message: string
   url: string
+  sha: string
 }
 
 type CommitsPerRelease = {
@@ -79,7 +80,8 @@ export class Changelog {
         .map(commit => {
           return {
             message: commit.commit.message,
-            url: commit.url
+            url: commit.url,
+            sha: commit.sha
           }
         })
         .reverse()
@@ -103,7 +105,8 @@ export class Changelog {
       commits.push(
         ...fetchedCommits.map(commit => ({
           message: commit.commit.message,
-          url: commit.url
+          url: commit.url,
+          sha: commit.sha
         }))
       )
 
@@ -136,7 +139,7 @@ export class Changelog {
         }
 
         if (commit.message.trim().startsWith(type)) {
-          typeChangelog += `- ${commit.message} ${commit.url}\n`
+          typeChangelog += `- ${commit.message} [${commit.sha.substring(0, 6)}](${commit.url})\n`
         }
       })
 
@@ -192,7 +195,7 @@ export class Changelog {
       page: 1
     })
 
-    core.debug(`Current release: ${releases.length}`)
+    core.debug(`Current release: ${version}`)
     core.debug(`Found ${releases.length} previous releases`)
 
     const tagsSha: string[] = []
