@@ -47,19 +47,19 @@ export class Release {
   ): Promise<void> {
     core.startGroup(`Commit and push changes`)
 
-    const latestCommit = await this.octokit.rest.git.getCommit({
+    const { data: latestCommit } = await this.octokit.rest.git.getCommit({
       ...github.context.repo,
       commit_sha: latestCommitSha
     })
 
     const createBlob = () => async (filePath: string) => {
       const content = await fs.promises.readFile(filePath, 'utf8')
-      const blob = await this.octokit.rest.git.createBlob({
+      const { data: blob } = await this.octokit.rest.git.createBlob({
         ...github.context.repo,
         content: content,
         encoding: 'utf-8'
       })
-      return blob.data
+      return blob
     }
 
     const blobs = await Promise.all(this.modifiedFiles.map(createBlob()))
@@ -72,10 +72,10 @@ export class Release {
         type: `blob`,
         sha
       })),
-      base_tree: latestCommit.data.tree.sha
+      base_tree: latestCommit.tree.sha
     })
 
-    const newCommit = await this.octokit.rest.git.createCommit({
+    const { data: newCommit } = await this.octokit.rest.git.createCommit({
       ...github.context.repo,
       message: `ci(skip): ${this.version}`,
       tree: tree.data.sha,
@@ -85,7 +85,7 @@ export class Release {
     await this.octokit.rest.git.updateRef({
       ...github.context.repo,
       ref: `heads/${defaultBranch}`,
-      sha: newCommit.data.sha
+      sha: newCommit.sha
     })
 
     core.info(
@@ -122,20 +122,17 @@ export class Release {
    * 4. Create a GitHub release and its corresponding tag.
    */
   async create(): Promise<void> {
-    const repo = await this.octokit.rest.repos.get({
+    const { data: repo } = await this.octokit.rest.repos.get({
       ...github.context.repo
     })
 
-    const ref = await this.octokit.rest.git.getRef({
+    const { data: ref } = await this.octokit.rest.git.getRef({
       ...github.context.repo,
-      ref: `heads/${repo.data.default_branch}`
+      ref: `heads/${repo.default_branch}`
     })
 
     await this.generateChangelog()
-    await this.commitAndPushChanges(
-      repo.data.default_branch,
-      ref.data.object.sha
-    )
+    await this.commitAndPushChanges(repo.default_branch, ref.object.sha)
     await this.createRelease()
   }
 }

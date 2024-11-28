@@ -166,7 +166,7 @@ export class Changelog {
         })
 
       baseSha = await this.tagCommitSha(previousRelease.tag_name)
-    } catch (error) {
+    } catch {
       // No previous release
       baseSha = undefined
     }

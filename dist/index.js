@@ -29934,6 +29934,18 @@ exports.Changelog = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(9896));
 const github = __importStar(__nccwpck_require__(3228));
 const core = __importStar(__nccwpck_require__(7484));
+// See https://github.com/pvdlg/conventional-changelog-metahub.
+const commitTypeNames = new Map();
+commitTypeNames.set('feat', 'Features');
+commitTypeNames.set('fix', 'Bug Fixes');
+commitTypeNames.set('docs', 'Documentation');
+commitTypeNames.set('style', 'Styles');
+commitTypeNames.set('refactor', 'Code Refactoring');
+commitTypeNames.set('test', 'Tests');
+commitTypeNames.set('build', 'Builds');
+commitTypeNames.set('ci', 'Continuous Integrations');
+commitTypeNames.set('chore', 'Chores');
+commitTypeNames.set('revert', 'Reverts');
 class Changelog {
     octokit;
     constructor(octokit) {
@@ -29972,12 +29984,15 @@ class Changelog {
                 ...github.context.repo,
                 basehead: `${base}...${head}`
             });
-            return compare.commits.map(commit => {
+            return compare.commits
+                .map(commit => {
                 return {
                     message: commit.commit.message,
-                    url: commit.html_url
+                    url: commit.html_url,
+                    sha: commit.sha
                 };
-            });
+            })
+                .reverse();
         }
         // No base, get all commits up to HEAD.
         const commits = [];
@@ -29993,11 +30008,41 @@ class Changelog {
             fetchedCommits = data;
             commits.push(...fetchedCommits.map(commit => ({
                 message: commit.commit.message,
-                url: commit.html_url
+                url: commit.html_url,
+                sha: commit.sha
             })));
             page++;
         } while (fetchedCommits.length === 100);
-        return commits;
+        return commits.reverse();
+    }
+    /**
+     * Generate a markdown CHANGELOG for given release.
+     * @param release The release to generate a CHANGELOG for.
+     * @param skipTitle Do not add the release version as title.
+     * @returns {string} The CHANGELOG markdown.
+     * @private
+     */
+    markdown(release, skipTitle) {
+        let changelog = '';
+        if (!skipTitle) {
+            changelog += `\n## ${release.version}\n`;
+        }
+        for (const [type, title] of commitTypeNames.entries()) {
+            let typeChangelog = '';
+            release.commits.map((commit) => {
+                if (commit.message.trim().startsWith('ci(skip)')) {
+                    return;
+                }
+                if (commit.message.trim().startsWith(type)) {
+                    typeChangelog += `- ${commit.message.replace(/^\w+(?:\(.*?\))?:\s*/, '')} [${commit.sha.substring(0, 6)}](${commit.url})\n`;
+                }
+            });
+            if (typeChangelog.length > 0) {
+                changelog += `\n### ${title}\n`;
+                changelog += typeChangelog;
+            }
+        }
+        return changelog;
     }
     /**
      * Generate the release CHANGELOG.
@@ -30011,16 +30056,15 @@ class Changelog {
             });
             baseSha = await this.tagCommitSha(previousRelease.tag_name);
         }
-        catch (error) {
+        catch {
             // No previous release
             baseSha = undefined;
         }
         const commits = await this.commits(baseSha, 'HEAD');
-        let changelog = '';
-        for (const commit of commits) {
-            changelog += `- ${commit.message} ${commit.url}\n`;
-        }
-        return changelog;
+        return this.markdown({
+            version: '',
+            commits: commits
+        }, true);
     }
     /**
      * Generate the CHANGELOG.md for last releases.
@@ -30031,46 +30075,56 @@ class Changelog {
     async generate(version, releaseCount) {
         const { data: releases } = await this.octokit.rest.repos.listReleases({
             ...github.context.repo,
-            per_page: releaseCount + 1, // Get one more to compare with the last release.
+            per_page: releaseCount,
             page: 1
         });
+        core.debug(`Current release: ${version}`);
         core.debug(`Found ${releases.length} previous releases`);
-        if (releases.length === 0) {
-            core.debug(`No previous release yet`);
-            const changelog = await this.release();
-            fs_1.default.writeFileSync('CHANGELOG.md', `# ${version}\n\n${changelog}`);
-            return;
-        }
         const tagsSha = [];
         for (const release of releases) {
             core.debug(`Get tag SHA for release ${release.tag_name}`);
             const sha = await this.tagCommitSha(release.tag_name);
             tagsSha.push(sha);
         }
+        const commitsPerRelease = [];
         // Get commits for the version being released.
-        const beingReleasedCommits = await this.commits(tagsSha[0], 'HEAD');
-        core.debug(`Found ${beingReleasedCommits.length} for release ${version}`);
+        let beingReleasedCommits = [];
+        if (releases.length > 0) {
+            // There are previous releases.
+            const latestReleaseSha = tagsSha[0];
+            beingReleasedCommits = await this.commits(latestReleaseSha, 'HEAD');
+        }
+        else {
+            // No previous releases.
+            beingReleasedCommits = await this.commits(undefined, 'HEAD');
+        }
+        core.debug(`Found ${beingReleasedCommits.length} commits for release ${version}`);
+        commitsPerRelease.push({
+            version: version,
+            commits: beingReleasedCommits
+        });
         // Get commits for each previous release.
-        const commitsPerPreviousRelease = [];
-        for (let index = 0; index < releases.length - 1; index++) {
+        for (let index = 0; index < releases.length; index++) {
             const release = releases[index];
-            const commits = await this.commits(tagsSha[index + 1], tagsSha[index]);
-            core.debug(`Found ${commits.length} for release ${release.tag_name}`);
-            commitsPerPreviousRelease.push({
+            const headSha = tagsSha[index];
+            let baseSha;
+            if (index + 1 < releases.length) {
+                baseSha = tagsSha[index + 1];
+            }
+            else {
+                baseSha = undefined; // Oldest release.
+            }
+            const commits = await this.commits(baseSha, headSha);
+            core.debug(`Found ${commits.length} commits for release ${release.tag_name}`);
+            commitsPerRelease.push({
                 version: release.tag_name,
                 commits: commits
             });
         }
-        let changelog = `# ${version}\n`;
-        for (const commit of beingReleasedCommits) {
-            changelog += `- ${commit.message} ${commit.url}\n`;
-        }
-        for (const release of commitsPerPreviousRelease) {
-            changelog += `\n# ${release.version}\n`;
-            for (const commit of release.commits) {
-                changelog += `- ${commit.message} ${commit.url}\n`;
-            }
-        }
+        let changelog = '';
+        commitsPerRelease.map((release) => {
+            changelog += this.markdown(release, false);
+        });
         fs_1.default.writeFileSync('CHANGELOG.md', changelog);
     }
 }
@@ -30203,18 +30257,18 @@ class Release {
      */
     async commitAndPushChanges(defaultBranch, latestCommitSha) {
         core.startGroup(`Commit and push changes`);
-        const latestCommit = await this.octokit.rest.git.getCommit({
+        const { data: latestCommit } = await this.octokit.rest.git.getCommit({
             ...github.context.repo,
             commit_sha: latestCommitSha
         });
         const createBlob = () => async (filePath) => {
             const content = await fs_1.default.promises.readFile(filePath, 'utf8');
-            const blob = await this.octokit.rest.git.createBlob({
+            const { data: blob } = await this.octokit.rest.git.createBlob({
                 ...github.context.repo,
                 content: content,
                 encoding: 'utf-8'
             });
-            return blob.data;
+            return blob;
         };
         const blobs = await Promise.all(this.modifiedFiles.map(createBlob()));
         const tree = await this.octokit.rest.git.createTree({
@@ -30225,9 +30279,9 @@ class Release {
                 type: `blob`,
                 sha
             })),
-            base_tree: latestCommit.data.tree.sha
+            base_tree: latestCommit.tree.sha
         });
-        const newCommit = await this.octokit.rest.git.createCommit({
+        const { data: newCommit } = await this.octokit.rest.git.createCommit({
             ...github.context.repo,
             message: `ci(skip): ${this.version}`,
             tree: tree.data.sha,
@@ -30236,7 +30290,7 @@ class Release {
         await this.octokit.rest.git.updateRef({
             ...github.context.repo,
             ref: `heads/${defaultBranch}`,
-            sha: newCommit.data.sha
+            sha: newCommit.sha
         });
         core.info(`Changes have been successfully committed and pushed to ${defaultBranch}`);
         core.endGroup();
@@ -30266,15 +30320,15 @@ class Release {
      * 4. Create a GitHub release and its corresponding tag.
      */
     async create() {
-        const repo = await this.octokit.rest.repos.get({
+        const { data: repo } = await this.octokit.rest.repos.get({
             ...github.context.repo
         });
-        const ref = await this.octokit.rest.git.getRef({
+        const { data: ref } = await this.octokit.rest.git.getRef({
             ...github.context.repo,
-            ref: `heads/${repo.data.default_branch}`
+            ref: `heads/${repo.default_branch}`
         });
         await this.generateChangelog();
-        await this.commitAndPushChanges(repo.data.default_branch, ref.data.object.sha);
+        await this.commitAndPushChanges(repo.default_branch, ref.object.sha);
         await this.createRelease();
     }
 }
