@@ -1,5 +1,7 @@
-name: 'E2P Create Release'
-description: 'GitHub Action for creating releases'
+name: 'E2P Action Create Release'
+description:
+  'GitHub Action that generates version files, CHANGELOG.md and GitHub releases
+  based on the Git history and commit messages.'
 author: 'matchgroup-e2p'
 
 inputs:

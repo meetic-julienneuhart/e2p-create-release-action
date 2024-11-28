@@ -1,4 +1,4 @@
-# Action Create Release
+# E2P Action Create Release
 
 This action generates version files, CHANGELOG.md and GitHub releases based on
 the Git history and commit messages.
