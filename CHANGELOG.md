@@ -1,4 +1,9 @@
 
+## v0.11.0
+
+### Chores
+- more update [5fa140](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/5fa1404808f63a99d7f46d84ffb7f8ef34d07e38)
+
 ## v0.10.0
 
 ### Chores
@@ -43,9 +48,5 @@
 ## v0.2.0
 
 ### Features
-- this is for the second release [5c92ab](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/5c92abf0a11dcd8f891be28e6d137b211aa780fd)
-
-## v0.1.0
-
-### Features
 - bootstrap action [b16002](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/b16002c092eacf5a27220bd5c5df6718336d6cbd)
+- this is for the second release [5c92ab](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/5c92abf0a11dcd8f891be28e6d137b211aa780fd)
