@@ -1,16 +1,16 @@
 {
-  "name": "e2p-create-release-action",
-  "description": "GitHub action for creating releases",
+  "name": "ts-action-create-release",
+  "description": "GitHub action that generates version files, CHANGELOG.md and GitHub releases based on the Git history and commit messages",
   "version": "0.0.0",
   "author": "matchgroup-e2p",
   "private": true,
-  "homepage": "https://github.com/actions/typescript-action",
+  "homepage": "https://github.com/matchgroup-e2p/ts-action-create-release",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/matchgroup-e2p/ts-action-create-release.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/typescript-action/issues"
+    "url": "https://github.com/matchgroup-e2p/ts-action-create-release/issues"
   },
   "keywords": [
     "actions",

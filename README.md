@@ -1,6 +1,7 @@
-# E2P Create Release
+# Action Create Release
 
-This action creates releases and their corresponding tags.
+This action generates version files, CHANGELOG.md and GitHub releases based on
+the Git history and commit messages.
 
 ## Usage
 
