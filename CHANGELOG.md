@@ -1,4 +1,9 @@
 
+## v0.10.0
+
+### Chores
+- update name [c423b0](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/c423b0b9ab3f59788a1ad4a3187075623a7a685d)
+
 ## v0.9.0
 
 ### Features
