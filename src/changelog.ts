@@ -128,12 +128,18 @@ export class Changelog {
     }
 
     for (const [type, title] of commitTypeNames.entries()) {
-      changelog += `\n## ${title}\n`
+      let typeChangelog = ''
+
       release.commits.map((commit: Commit) => {
         if (commit.message.trim().startsWith(type)) {
-          changelog += `- ${commit.message} ${commit.url}\n`
+          typeChangelog += `- ${commit.message} ${commit.url}\n`
         }
       })
+
+      if (typeChangelog.length > 0) {
+        changelog += `\n## ${title}\n`
+        changelog += typeChangelog
+      }
     }
 
     return changelog
