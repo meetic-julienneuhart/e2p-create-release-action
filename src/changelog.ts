@@ -139,7 +139,7 @@ export class Changelog {
         }
 
         if (commit.message.trim().startsWith(type)) {
-          typeChangelog += `- ${commit.message} [${commit.sha.substring(0, 6)}](${commit.url})\n`
+          typeChangelog += `- ${commit.message.replace(/^\w+(?:\(.*?\))?:\s*/, '')} [${commit.sha.substring(0, 6)}](${commit.url})\n`
         }
       })
 
