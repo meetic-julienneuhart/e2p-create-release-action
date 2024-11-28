@@ -1,4 +1,9 @@
 
+## v0.12.0
+
+### Bug Fixes
+- lint errors [93b240](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/93b2409777481f0b1e0ec3657fb3d40b25ba9056)
+
 ## v0.11.0
 
 ### Chores
@@ -43,10 +48,6 @@
 ## v0.3.0
 
 ### Features
-- improvements for third release [95cfd3](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/95cfd33edb6b45a0739b9fb47fe4612ed8f7fd80)
-
-## v0.2.0
-
-### Features
 - bootstrap action [b16002](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/b16002c092eacf5a27220bd5c5df6718336d6cbd)
 - this is for the second release [5c92ab](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/5c92abf0a11dcd8f891be28e6d137b211aa780fd)
+- improvements for third release [95cfd3](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/95cfd33edb6b45a0739b9fb47fe4612ed8f7fd80)
