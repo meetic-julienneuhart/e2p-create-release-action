@@ -1,4 +1,12 @@
 
+## v0.17.0 - Nov. 29, 2024
+
+### Features
+- npm: add more logs [bf5156](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/bf51567a4eb994a4664093db86ca7e4281b3aa01)
+
+### Bug Fixes
+- npm: add empty line to package files [759cf9](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/759cf9f3a3def37c5a4545809f151697e533720e)
+
 ## v0.16.0 - Nov. 29, 2024
 
 ### Features
@@ -55,18 +63,14 @@
 ## v0.8.0 - Nov. 28, 2024
 
 ### Features
-- use commits html_url [904436](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/904436afed80ebbb3ad1dab60b01c6e4df75805e)
-- truncate commit urls [0a80db](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/0a80db905b6429a1f4b2d1b417e9ac7c6854b6df)
-
-## v0.7.0 - Nov. 28, 2024
-
-### Features
 - bootstrap action [b16002](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/b16002c092eacf5a27220bd5c5df6718336d6cbd)
 - this is for the second release [5c92ab](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/5c92abf0a11dcd8f891be28e6d137b211aa780fd)
 - improvements for third release [95cfd3](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/95cfd33edb6b45a0739b9fb47fe4612ed8f7fd80)
 - commits per type [4e2f95](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/4e2f953dc8d211e9ea68c1f75fdd27187e83b7b8)
 - remove empty types [a15f57](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/a15f577269d73076798784bc3b9f260de4dbe42c)
 - skip ci(skip) messages [953716](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/9537165e41a7f78c336a40922ed9d76b8992d856)
+- truncate commit urls [0a80db](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/0a80db905b6429a1f4b2d1b417e9ac7c6854b6df)
+- use commits html_url [904436](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/904436afed80ebbb3ad1dab60b01c6e4df75805e)
 
 ### Bug Fixes
 - CHANGELOG [b48ad4](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/b48ad4cbbd9837be9b0d8f97137531aacc58268c)
