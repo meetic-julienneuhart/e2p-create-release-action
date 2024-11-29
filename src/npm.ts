@@ -27,7 +27,7 @@ export class Npm {
 
     const json = JSON.parse(raw) as Package
     json.version = this.version
-    fs.writeFileSync(filePath, JSON.stringify(json, null, 2), 'utf-8')
+    fs.writeFileSync(filePath, JSON.stringify(json, null, 2) + '\n', 'utf-8')
   }
 
   /**

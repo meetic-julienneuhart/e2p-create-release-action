@@ -30261,7 +30261,7 @@ class Npm {
         const raw = fs.readFileSync(filePath, 'utf-8');
         const json = JSON.parse(raw);
         json.version = this.version;
-        fs.writeFileSync(filePath, JSON.stringify(json, null, 2), 'utf-8');
+        fs.writeFileSync(filePath, JSON.stringify(json, null, 2) + '\n', 'utf-8');
     }
     /**
      * Update the version property of the package.json and package-lock.json
