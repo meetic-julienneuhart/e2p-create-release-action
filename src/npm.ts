@@ -11,9 +11,10 @@ export class Npm {
 
   constructor(version: string, packageRootDir: string) {
     this.version = version.replaceAll('v', '')
-    this.packageRootDir = !packageRootDir.endsWith('/')
-      ? packageRootDir + '/'
-      : packageRootDir
+    this.packageRootDir =
+      !packageRootDir.endsWith('/') && packageRootDir.length > 0
+        ? packageRootDir + '/'
+        : packageRootDir
   }
 
   /**

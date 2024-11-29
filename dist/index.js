@@ -30247,9 +30247,10 @@ class Npm {
     packageRootDir;
     constructor(version, packageRootDir) {
         this.version = version.replaceAll('v', '');
-        this.packageRootDir = !packageRootDir.endsWith('/')
-            ? packageRootDir + '/'
-            : packageRootDir;
+        this.packageRootDir =
+            !packageRootDir.endsWith('/') && packageRootDir.length > 0
+                ? packageRootDir + '/'
+                : packageRootDir;
     }
     /**
      * Write the version property to the specified file.
