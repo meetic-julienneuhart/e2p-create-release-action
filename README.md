@@ -8,7 +8,7 @@ the Git history and commit messages.
 See [action.yml](action.yml)
 
 ```yaml
-- uses: matchgroup-e2p/e2p-create-release-action@v0
+- uses: matchgroup-e2p/ts-action-create-release@v0
   with:
     version: 'v0.1.0'
 ```
