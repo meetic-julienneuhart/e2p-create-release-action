@@ -1,4 +1,12 @@
 
+## v0.16.0 - Nov. 29, 2024
+
+### Features
+- npm: add package.json (and package-lock.json) option [a60034](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/a6003477d047a9002aa8238b948e2e3cdcb9d27a)
+
+### Bug Fixes
+- npm: add missing case if package dir is at root [adf987](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/adf987dcdcd4faf21314ec44afa72aff46fa9844)
+
 ## v0.15.0 - Nov. 29, 2024
 
 ### Bug Fixes
@@ -53,16 +61,12 @@
 ## v0.7.0 - Nov. 28, 2024
 
 ### Features
-- skip ci(skip) messages [953716](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/9537165e41a7f78c336a40922ed9d76b8992d856)
-
-## v0.6.0 - Nov. 28, 2024
-
-### Features
 - bootstrap action [b16002](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/b16002c092eacf5a27220bd5c5df6718336d6cbd)
 - this is for the second release [5c92ab](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/5c92abf0a11dcd8f891be28e6d137b211aa780fd)
 - improvements for third release [95cfd3](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/95cfd33edb6b45a0739b9fb47fe4612ed8f7fd80)
 - commits per type [4e2f95](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/4e2f953dc8d211e9ea68c1f75fdd27187e83b7b8)
 - remove empty types [a15f57](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/a15f577269d73076798784bc3b9f260de4dbe42c)
+- skip ci(skip) messages [953716](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/9537165e41a7f78c336a40922ed9d76b8992d856)
 
 ### Bug Fixes
 - CHANGELOG [b48ad4](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/b48ad4cbbd9837be9b0d8f97137531aacc58268c)
