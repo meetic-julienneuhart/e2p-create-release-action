@@ -1,4 +1,9 @@
 
+## v0.18.0 - Nov. 29, 2024
+
+### Bug Fixes
+- lint: reorder env vars [233e21](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/233e21f128f62e2c1acedfbfab210fa7fce4885a)
+
 ## v0.17.0 - Nov. 29, 2024
 
 ### Features
@@ -58,11 +63,6 @@
 ## v0.9.0 - Nov. 28, 2024
 
 ### Features
-- remove prefix from commit messages [8f51f6](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/8f51f6dad4551da89017a617da6e0914066d4c06)
-
-## v0.8.0 - Nov. 28, 2024
-
-### Features
 - bootstrap action [b16002](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/b16002c092eacf5a27220bd5c5df6718336d6cbd)
 - this is for the second release [5c92ab](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/5c92abf0a11dcd8f891be28e6d137b211aa780fd)
 - improvements for third release [95cfd3](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/95cfd33edb6b45a0739b9fb47fe4612ed8f7fd80)
@@ -71,6 +71,7 @@
 - skip ci(skip) messages [953716](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/9537165e41a7f78c336a40922ed9d76b8992d856)
 - truncate commit urls [0a80db](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/0a80db905b6429a1f4b2d1b417e9ac7c6854b6df)
 - use commits html_url [904436](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/904436afed80ebbb3ad1dab60b01c6e4df75805e)
+- remove prefix from commit messages [8f51f6](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/8f51f6dad4551da89017a617da6e0914066d4c06)
 
 ### Bug Fixes
 - CHANGELOG [b48ad4](https://github.com/meetic-julienneuhart/e2p-create-release-action/commit/b48ad4cbbd9837be9b0d8f97137531aacc58268c)
