@@ -30242,6 +30242,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Npm = void 0;
 const fs = __importStar(__nccwpck_require__(9896));
+const core = __importStar(__nccwpck_require__(7484));
 class Npm {
     version;
     packageRootDir;
@@ -30270,11 +30271,18 @@ class Npm {
      */
     updateVersion() {
         const modifiedFiles = [];
-        this.writeVersion(this.packageRootDir + 'package.json');
-        modifiedFiles.push(this.packageRootDir + 'package.json');
-        if (fs.existsSync(this.packageRootDir + 'package-lock.json')) {
-            this.writeVersion(this.packageRootDir + 'package-lock.json');
-            modifiedFiles.push(this.packageRootDir + 'package-lock.json');
+        const packageFilePath = this.packageRootDir + 'package.json';
+        this.writeVersion(packageFilePath);
+        modifiedFiles.push(packageFilePath);
+        core.info(`${packageFilePath} has been successfully updated`);
+        const packageLockFilePath = this.packageRootDir + 'package-lock.json';
+        if (fs.existsSync(packageLockFilePath)) {
+            this.writeVersion(packageLockFilePath);
+            modifiedFiles.push(packageLockFilePath);
+            core.info(`${packageLockFilePath} has been successfully updated`);
+        }
+        else {
+            core.warning(`No ${packageLockFilePath} file found`);
         }
         return modifiedFiles;
     }
@@ -30347,19 +30355,27 @@ class Release {
      * @private
      */
     updateVersionFiles() {
+        core.startGroup('Update version files');
         if (this.versionFiles.npm.update) {
             this.modifiedFiles.push(...this.npm.updateVersion());
         }
+        if (this.modifiedFiles.length > 0) {
+            core.info('Version files have been been successfully updated');
+        }
+        else {
+            core.info('No version files updated');
+        }
+        core.endGroup();
     }
     /**
      * Generate the CHANGELOG.md file for last 10 releases.
      * @private
      */
     async generateChangelog() {
-        core.startGroup(`Generate CHANGELOG.md`);
+        core.startGroup('Generate CHANGELOG.md');
         await this.changelog.generate(this.version, 9);
         this.modifiedFiles.push('CHANGELOG.md');
-        core.info(`CHANGELOG.md has been successfully generated`);
+        core.info('CHANGELOG.md has been successfully generated');
         core.endGroup();
     }
     /**
@@ -30369,7 +30385,7 @@ class Release {
      * @private
      */
     async commitAndPushChanges(defaultBranch, latestCommitSha) {
-        core.startGroup(`Commit and push changes`);
+        core.startGroup('Commit and push changes');
         const { data: latestCommit } = await this.octokit.rest.git.getCommit({
             ...github.context.repo,
             commit_sha: latestCommitSha
@@ -30388,8 +30404,8 @@ class Release {
             ...github.context.repo,
             tree: blobs.map(({ sha }, index) => ({
                 path: this.modifiedFiles[index],
-                mode: `100644`,
-                type: `blob`,
+                mode: '100644',
+                type: 'blob',
                 sha
             })),
             base_tree: latestCommit.tree.sha

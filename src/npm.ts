@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import * as core from '@actions/core'
 
 interface Package {
   version?: string
@@ -38,12 +39,18 @@ export class Npm {
   updateVersion(): string[] {
     const modifiedFiles: string[] = []
 
-    this.writeVersion(this.packageRootDir + 'package.json')
-    modifiedFiles.push(this.packageRootDir + 'package.json')
+    const packageFilePath = this.packageRootDir + 'package.json'
+    this.writeVersion(packageFilePath)
+    modifiedFiles.push(packageFilePath)
+    core.info(`${packageFilePath} has been successfully updated`)
 
-    if (fs.existsSync(this.packageRootDir + 'package-lock.json')) {
-      this.writeVersion(this.packageRootDir + 'package-lock.json')
-      modifiedFiles.push(this.packageRootDir + 'package-lock.json')
+    const packageLockFilePath = this.packageRootDir + 'package-lock.json'
+    if (fs.existsSync(packageLockFilePath)) {
+      this.writeVersion(packageLockFilePath)
+      modifiedFiles.push(packageLockFilePath)
+      core.info(`${packageLockFilePath} has been successfully updated`)
+    } else {
+      core.warning(`No ${packageLockFilePath} file found`)
     }
 
     return modifiedFiles

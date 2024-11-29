@@ -44,9 +44,18 @@ export class Release {
    * @private
    */
   private updateVersionFiles(): void {
+    core.startGroup('Update version files')
+
     if (this.versionFiles.npm.update) {
       this.modifiedFiles.push(...this.npm.updateVersion())
     }
+
+    if (this.modifiedFiles.length > 0) {
+      core.info('Version files have been been successfully updated')
+    } else {
+      core.info('No version files updated')
+    }
+    core.endGroup()
   }
 
   /**
@@ -54,12 +63,12 @@ export class Release {
    * @private
    */
   private async generateChangelog(): Promise<void> {
-    core.startGroup(`Generate CHANGELOG.md`)
+    core.startGroup('Generate CHANGELOG.md')
 
     await this.changelog.generate(this.version, 9)
     this.modifiedFiles.push('CHANGELOG.md')
 
-    core.info(`CHANGELOG.md has been successfully generated`)
+    core.info('CHANGELOG.md has been successfully generated')
     core.endGroup()
   }
 
@@ -73,7 +82,7 @@ export class Release {
     defaultBranch: string,
     latestCommitSha: string
   ): Promise<void> {
-    core.startGroup(`Commit and push changes`)
+    core.startGroup('Commit and push changes')
 
     const { data: latestCommit } = await this.octokit.rest.git.getCommit({
       ...github.context.repo,
@@ -96,8 +105,8 @@ export class Release {
       ...github.context.repo,
       tree: blobs.map(({ sha }, index) => ({
         path: this.modifiedFiles[index],
-        mode: `100644`,
-        type: `blob`,
+        mode: '100644',
+        type: 'blob',
         sha
       })),
       base_tree: latestCommit.tree.sha
