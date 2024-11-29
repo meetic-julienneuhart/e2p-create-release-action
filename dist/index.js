@@ -29938,7 +29938,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Changelog = void 0;
-const fs_1 = __importDefault(__nccwpck_require__(9896));
+const fs = __importStar(__nccwpck_require__(9896));
 const github = __importStar(__nccwpck_require__(3228));
 const core = __importStar(__nccwpck_require__(7484));
 const dayjs_1 = __importDefault(__nccwpck_require__(3706));
@@ -30144,7 +30144,7 @@ class Changelog {
         commitsPerRelease.map((release) => {
             changelog += this.markdown(release, false);
         });
-        fs_1.default.writeFileSync('CHANGELOG.md', changelog);
+        fs.writeFileSync('CHANGELOG.md', changelog);
     }
 }
 exports.Changelog = Changelog;
@@ -30192,7 +30192,13 @@ async function run() {
     try {
         const token = core.getInput('token', { required: true });
         const version = core.getInput('version', { required: true });
-        const release = new release_1.Release(token, version.startsWith('v') ? version : 'v' + version);
+        const versionFilesConfig = {
+            npm: {
+                update: core.getInput('update_npm_package') === 'true',
+                packageRootDir: core.getInput('npm_package_root_dir')
+            }
+        };
+        const release = new release_1.Release(token, version.startsWith('v') ? version : 'v' + version, versionFilesConfig);
         await release.create();
     }
     catch (error) {
@@ -30201,6 +30207,78 @@ async function run() {
             core.setFailed(error.message);
     }
 }
+
+
+/***/ }),
+
+/***/ 5210:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Npm = void 0;
+const fs = __importStar(__nccwpck_require__(9896));
+class Npm {
+    version;
+    packageRootDir;
+    constructor(version, packageRootDir) {
+        this.version = version.replaceAll('v', '');
+        this.packageRootDir = !packageRootDir.endsWith('/')
+            ? packageRootDir + '/'
+            : packageRootDir;
+    }
+    /**
+     * Write the version property to the specified file.
+     * @param filePath The filepath.
+     * @private
+     */
+    writeVersion(filePath) {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const json = JSON.parse(raw);
+        json.version = this.version;
+        fs.writeFileSync(filePath, JSON.stringify(json, null, 2), 'utf-8');
+    }
+    /**
+     * Update the version property of the package.json and package-lock.json
+     * files.
+     * @returns {string[]} The list of modified files.
+     */
+    updateVersion() {
+        const modifiedFiles = [];
+        this.writeVersion(this.packageRootDir + 'package.json');
+        modifiedFiles.push(this.packageRootDir + 'package.json');
+        if (fs.existsSync(this.packageRootDir + 'package-lock.json')) {
+            this.writeVersion(this.packageRootDir + 'package-lock.json');
+            modifiedFiles.push(this.packageRootDir + 'package-lock.json');
+        }
+        return modifiedFiles;
+    }
+}
+exports.Npm = Npm;
 
 
 /***/ }),
@@ -30242,20 +30320,35 @@ const github = __importStar(__nccwpck_require__(3228));
 const changelog_1 = __nccwpck_require__(8397);
 const core = __importStar(__nccwpck_require__(7484));
 const fs_1 = __importDefault(__nccwpck_require__(9896));
+const npm_1 = __nccwpck_require__(5210);
 class Release {
     octokit;
+    npm;
     changelog;
     version;
+    versionFiles;
     modifiedFiles;
     /**
      * @param token The GitHub token to use.
      * @param version The version to release.
+     * @param versionFiles The configuration for updating version files.
      */
-    constructor(token, version) {
+    constructor(token, version, versionFiles) {
         this.octokit = github.getOctokit(token);
         this.changelog = new changelog_1.Changelog(this.octokit);
+        this.npm = new npm_1.Npm(version, versionFiles.npm.packageRootDir);
         this.version = version;
+        this.versionFiles = versionFiles;
         this.modifiedFiles = [];
+    }
+    /**
+     * Update the version files.
+     * @private
+     */
+    updateVersionFiles() {
+        if (this.versionFiles.npm.update) {
+            this.modifiedFiles.push(...this.npm.updateVersion());
+        }
     }
     /**
      * Generate the CHANGELOG.md file for last 10 releases.
@@ -30333,8 +30426,8 @@ class Release {
     }
     /**
      * Release creation encapsulates many steps:
-     * 1. Generate a CHANGELOG.md file.
-     * 2. Generate and/or update all version files.
+     * 1. Generate and/or update all version files.
+     * 2. Generate a CHANGELOG.md file.
      * 3. Commit and push all changes.
      * 4. Create a GitHub release and its corresponding tag.
      */
@@ -30346,6 +30439,7 @@ class Release {
             ...github.context.repo,
             ref: `heads/${repo.default_branch}`
         });
+        this.updateVersionFiles();
         await this.generateChangelog();
         await this.commitAndPushChanges(repo.default_branch, ref.object.sha);
         await this.createRelease();

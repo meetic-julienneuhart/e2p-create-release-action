@@ -1,4 +1,4 @@
-import fs from 'fs'
+import * as fs from 'fs'
 import { GitHub } from '@actions/github/lib/utils'
 import * as github from '@actions/github'
 import * as core from '@actions/core'

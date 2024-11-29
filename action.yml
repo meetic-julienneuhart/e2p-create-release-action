@@ -12,6 +12,12 @@ inputs:
   version:
     description: 'The version to release'
     required: true
+  update_npm_package:
+    description: 'Update the npm package version'
+    default: 'false'
+  npm_package_root_dir:
+    description: 'Root directory of the npm package'
+    default: ''
 
 runs:
   using: node20

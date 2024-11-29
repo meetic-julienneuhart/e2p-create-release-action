@@ -3,22 +3,50 @@ import { GitHub } from '@actions/github/lib/utils'
 import { Changelog } from './changelog'
 import * as core from '@actions/core'
 import fs from 'fs'
+import { Npm } from './npm'
+
+export type VersionFilesConfig = {
+  npm: {
+    update: boolean
+    packageRootDir: string
+  }
+}
 
 export class Release {
   private octokit: InstanceType<typeof GitHub>
+  private npm: InstanceType<typeof Npm>
   private changelog: InstanceType<typeof Changelog>
+
   private readonly version: string
+  private readonly versionFiles: VersionFilesConfig
   private modifiedFiles: string[]
 
   /**
    * @param token The GitHub token to use.
    * @param version The version to release.
+   * @param versionFiles The configuration for updating version files.
    */
-  constructor(token: string, version: string) {
+  constructor(
+    token: string,
+    version: string,
+    versionFiles: VersionFilesConfig
+  ) {
     this.octokit = github.getOctokit(token)
     this.changelog = new Changelog(this.octokit)
+    this.npm = new Npm(version, versionFiles.npm.packageRootDir)
     this.version = version
+    this.versionFiles = versionFiles
     this.modifiedFiles = []
+  }
+
+  /**
+   * Update the version files.
+   * @private
+   */
+  private updateVersionFiles(): void {
+    if (this.versionFiles.npm.update) {
+      this.modifiedFiles.push(...this.npm.updateVersion())
+    }
   }
 
   /**
@@ -116,8 +144,8 @@ export class Release {
 
   /**
    * Release creation encapsulates many steps:
-   * 1. Generate a CHANGELOG.md file.
-   * 2. Generate and/or update all version files.
+   * 1. Generate and/or update all version files.
+   * 2. Generate a CHANGELOG.md file.
    * 3. Commit and push all changes.
    * 4. Create a GitHub release and its corresponding tag.
    */
@@ -131,6 +159,7 @@ export class Release {
       ref: `heads/${repo.default_branch}`
     })
 
+    this.updateVersionFiles()
     await this.generateChangelog()
     await this.commitAndPushChanges(repo.default_branch, ref.object.sha)
     await this.createRelease()
