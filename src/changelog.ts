@@ -2,6 +2,9 @@ import fs from 'fs'
 import { GitHub } from '@actions/github/lib/utils'
 import * as github from '@actions/github'
 import * as core from '@actions/core'
+import dayjs from 'dayjs'
+
+const dateFormat = 'MMM. D, Y'
 
 type Commit = {
   message: string
@@ -11,6 +14,7 @@ type Commit = {
 
 type CommitsPerRelease = {
   version: string
+  created: string
   commits: Commit[]
 }
 
@@ -127,7 +131,7 @@ export class Changelog {
     let changelog = ''
 
     if (!skipTitle) {
-      changelog += `\n## ${release.version}\n`
+      changelog += `\n## ${release.version} - ${release.created}\n`
     }
 
     for (const [type, title] of commitTypeNames.entries()) {
@@ -139,7 +143,17 @@ export class Changelog {
         }
 
         if (commit.message.trim().startsWith(type)) {
-          typeChangelog += `- ${commit.message.replace(/^\w+(?:\(.*?\))?:\s*/, '')} [${commit.sha.substring(0, 6)}](${commit.url})\n`
+          const match = commit.message.match(/^\w+(?:\((.*?)\))?:\s*(.*)$/)
+          let scope = '',
+            message = commit.message
+
+          if (match) {
+            scope = match[1] || ''
+            message = match[2]
+          }
+
+          const entry = scope.length > 0 ? `${scope}: ${message}` : message
+          typeChangelog += `- ${entry} [${commit.sha.substring(0, 6)}](${commit.url})\n`
         }
       })
 
@@ -176,6 +190,7 @@ export class Changelog {
     return this.markdown(
       {
         version: '',
+        created: '',
         commits: commits
       },
       true
@@ -223,6 +238,7 @@ export class Changelog {
 
     commitsPerRelease.push({
       version: version,
+      created: dayjs(Date.now()).format(dateFormat),
       commits: beingReleasedCommits
     })
 
@@ -245,6 +261,7 @@ export class Changelog {
 
       commitsPerRelease.push({
         version: release.tag_name,
+        created: dayjs(release.created_at).format(dateFormat),
         commits: commits
       })
     }
