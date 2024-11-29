@@ -4,7 +4,7 @@ import * as github from '@actions/github'
 import * as core from '@actions/core'
 import dayjs from 'dayjs'
 
-const dateFormat = 'MMM. D, Y'
+const dateFormat = 'MMM. D, YYYY'
 
 type Commit = {
   message: string
