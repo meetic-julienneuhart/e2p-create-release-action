@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: [self-hosted, docker]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Get Version
+        id: version
+        uses: matchgroup-e2p/ts-action-semantic-version@v0
+        with:
+          scheme: semver
+          workflow: release
+          release_branch: main
+
+      - name: Create Release
+        uses: matchgroup-e2p/ts-action-create-release@feat/action-logic
+        with:
+          version: ${{ steps.version.outputs.version }}
+          update_npm_package: 'true'
