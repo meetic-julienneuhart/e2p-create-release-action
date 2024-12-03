@@ -4,17 +4,35 @@ import { Changelog } from './changelog'
 import * as core from '@actions/core'
 import fs from 'fs'
 import { Npm } from './npm'
+import { CsProj } from './csproj'
+import { Sbt } from './sbt'
+import { Helm } from './helm'
 
 export type VersionFilesConfig = {
   npm: {
     update: boolean
-    packageRootDir: string
+    rootDir: string
+  }
+  csproj: {
+    update: boolean
+    rootDir: string
+  }
+  sbt: {
+    update: boolean
+    rootDir: string
+  }
+  helm: {
+    update: boolean
+    rootDir: string
   }
 }
 
 export class Release {
   private octokit: InstanceType<typeof GitHub>
   private npm: InstanceType<typeof Npm>
+  private csproj: InstanceType<typeof CsProj>
+  private sbt: InstanceType<typeof Sbt>
+  private helm: InstanceType<typeof Helm>
   private changelog: InstanceType<typeof Changelog>
 
   private readonly version: string
@@ -33,7 +51,10 @@ export class Release {
   ) {
     this.octokit = github.getOctokit(token)
     this.changelog = new Changelog(this.octokit)
-    this.npm = new Npm(version, versionFiles.npm.packageRootDir)
+    this.npm = new Npm(version, versionFiles.npm.rootDir)
+    this.csproj = new CsProj(version, versionFiles.csproj.rootDir)
+    this.sbt = new Sbt(version, versionFiles.sbt.rootDir)
+    this.helm = new Helm(version, versionFiles.helm.rootDir)
     this.version = version
     this.versionFiles = versionFiles
     this.modifiedFiles = []
@@ -43,11 +64,23 @@ export class Release {
    * Update the version files.
    * @private
    */
-  private updateVersionFiles(): void {
+  private async updateVersionFiles(): Promise<void> {
     core.startGroup('Update version files')
 
     if (this.versionFiles.npm.update) {
       this.modifiedFiles.push(...this.npm.updateVersion())
+    }
+
+    if (this.versionFiles.csproj.update) {
+      this.modifiedFiles.push(...(await this.csproj.updateVersion()))
+    }
+
+    if (this.versionFiles.sbt.update) {
+      this.modifiedFiles.push(this.sbt.updateVersion())
+    }
+
+    if (this.versionFiles.helm.update) {
+      this.modifiedFiles.push(this.helm.updateVersion())
     }
 
     if (this.modifiedFiles.length > 0) {
@@ -168,7 +201,7 @@ export class Release {
       ref: `heads/${repo.default_branch}`
     })
 
-    this.updateVersionFiles()
+    await this.updateVersionFiles()
     await this.generateChangelog()
     await this.commitAndPushChanges(repo.default_branch, ref.object.sha)
     await this.createRelease()

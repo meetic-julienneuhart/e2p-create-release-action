@@ -18,6 +18,24 @@ inputs:
   npm_package_root_dir:
     description: 'Root directory of the npm package'
     default: ''
+  update_csproj:
+    description: 'Update the .csproj files'
+    default: 'false'
+  csproj_root_dir:
+    description: 'Root directory of the .csproj files'
+    default: ''
+  update_version_sbt:
+    description: 'Update the version.sbt file'
+    default: 'false'
+  version_sbt_root_dir:
+    description: 'Root directory of the version.sbt file'
+    default: ''
+  update_helm_chart:
+    description: 'Update the Chart.yaml file'
+    default: 'false'
+  helm_chart_root_dir:
+    description: 'Root directory of the Chart.yaml file'
+    default: ''
 
 runs:
   using: node20

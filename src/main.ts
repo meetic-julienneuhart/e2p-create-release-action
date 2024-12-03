@@ -12,7 +12,19 @@ export async function run(): Promise<void> {
     const versionFilesConfig: VersionFilesConfig = {
       npm: {
         update: core.getInput('update_npm_package') === 'true',
-        packageRootDir: core.getInput('npm_package_root_dir')
+        rootDir: core.getInput('npm_package_root_dir')
+      },
+      csproj: {
+        update: core.getInput('update_csproj') === 'true',
+        rootDir: core.getInput('csproj_root_dir')
+      },
+      sbt: {
+        update: core.getInput('update_version_sbt') === 'true',
+        rootDir: core.getInput('version_sbt_root_dir')
+      },
+      helm: {
+        update: core.getInput('update_helm_chart') === 'true',
+        rootDir: core.getInput('helm_chart_root_dir')
       }
     }
 
@@ -23,7 +35,7 @@ export async function run(): Promise<void> {
     )
     await release.create()
   } catch (error) {
-    // Fail the workflow run if an error occurs
+    // Fail the workflow run if an error occurs.
     if (error instanceof Error) core.setFailed(error.message)
   }
 }

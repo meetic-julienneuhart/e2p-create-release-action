@@ -6,29 +6,23 @@ interface Package {
   [key: string]: unknown
 }
 
+interface PackageLock {
+  version?: string
+  packages?: {
+    '': Package
+    [key: string]: Package | undefined
+  }
+  [key: string]: unknown
+}
+
 export class Npm {
   private readonly version: string
-  private readonly packageRootDir: string
+  private readonly rootDir: string
 
-  constructor(version: string, packageRootDir: string) {
-    this.version = version.replaceAll('v', '')
-    this.packageRootDir =
-      !packageRootDir.endsWith('/') && packageRootDir.length > 0
-        ? packageRootDir + '/'
-        : packageRootDir
-  }
-
-  /**
-   * Write the version property to the specified file.
-   * @param filePath The filepath.
-   * @private
-   */
-  private writeVersion(filePath: string): void {
-    const raw = fs.readFileSync(filePath, 'utf-8')
-
-    const json = JSON.parse(raw) as Package
-    json.version = this.version
-    fs.writeFileSync(filePath, JSON.stringify(json, null, 2) + '\n', 'utf-8')
+  constructor(version: string, rootDir: string) {
+    this.version = version.replace(/^v/, '')
+    this.rootDir =
+      !rootDir.endsWith('/') && rootDir.length > 0 ? rootDir + '/' : rootDir
   }
 
   /**
@@ -39,14 +33,38 @@ export class Npm {
   updateVersion(): string[] {
     const modifiedFiles: string[] = []
 
-    const packageFilePath = this.packageRootDir + 'package.json'
-    this.writeVersion(packageFilePath)
+    const packageFilePath = `${this.rootDir}package.json`
+    const rawPackage = fs.readFileSync(packageFilePath, 'utf-8')
+
+    const jsonPackage = JSON.parse(rawPackage) as Package
+    jsonPackage.version = this.version
+
+    fs.writeFileSync(
+      packageFilePath,
+      JSON.stringify(jsonPackage, null, 2) + '\n',
+      'utf-8'
+    )
+
     modifiedFiles.push(packageFilePath)
     core.info(`${packageFilePath} has been successfully updated`)
 
-    const packageLockFilePath = this.packageRootDir + 'package-lock.json'
+    const packageLockFilePath = `${this.rootDir}package-lock.json`
     if (fs.existsSync(packageLockFilePath)) {
-      this.writeVersion(packageLockFilePath)
+      const rawPackageLock = fs.readFileSync(packageLockFilePath, 'utf-8')
+
+      const jsonPackageLock = JSON.parse(rawPackageLock) as PackageLock
+      jsonPackageLock.version = this.version
+
+      if (jsonPackageLock.packages && jsonPackageLock.packages['']) {
+        jsonPackageLock.packages[''].version = this.version
+      }
+
+      fs.writeFileSync(
+        packageLockFilePath,
+        JSON.stringify(jsonPackageLock, null, 2) + '\n',
+        'utf-8'
+      )
+
       modifiedFiles.push(packageLockFilePath)
       core.info(`${packageLockFilePath} has been successfully updated`)
     } else {
